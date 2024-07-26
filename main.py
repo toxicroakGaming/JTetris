@@ -13,8 +13,10 @@ screen = pygame.display.set_mode((width, height))
 pygame.display.set_caption("Tetris")
 startX = 0
 startY = 0
+angle = 90
 #the size of each block
 space = 30
+cur_shape = []
 #makes it easier on the eyes
 incrX = [startX, startX + space, startX + (space * 2), startX + (space * 3)]
 incrY = [startY, startY + space, startY + (space * 2), startY + (space * 3)]
@@ -27,99 +29,64 @@ S = [(incrX[0], incrY[0]), (incrX[0], incrY[1]), (incrX[1], incrY[1]), (incrX[1]
 Z = [(incrX[0], incrY[2]), (incrX[2], incrY[2]), (incrX[2], incrY[1]), (incrX[3], incrY[1]),(incrX[3], incrY[0]),(incrX[1], incrY[0]),(incrX[1], incrY[1]),(incrX[0], incrY[1]),(incrX[0], incrY[2])]
 shapes = [I, T, O, J, L, S, Z]
 active_shapes = []
-dx = space * 2
-dy = space
-trans = [(x + dx, y + dy) for (x, y) in T]
-dx += space * 2
-transO = [(x + dx, y + dy) for (x, y) in O]
-dx += space * 2
-transJ = [(x + dx, y + dy) for (x, y) in J]
-dx += space * 2
-transL = [(x + dx, y + dy) for (x, y) in L]
-dx += space * 2
-transS = [(x + dx, y + dy) for (x, y) in S]
-dx += space * 3
-transZ = [(x + dx, y + dy) for (x, y) in Z]
-
-def rotate_point(point, angle, pivot):
-    """Rotate a point around a pivot."""
-    s, c = math.sin(angle), math.cos(angle)
-    px, py = pivot
-    x, y = point
-    # Translate point back to origin:
-    x -= px
-    y -= py
-    # Rotate point
-    x_new = x * c - y * s
-    y_new = x * s + y * c
-    # Translate point back
-    x = x_new + px
-    y = y_new + py
-    return (x, y)
-
-# Function to find the center of the polygon
-def find_center(points):
-    """Find the center (centroid) of a polygon."""
-    x_list = [point[0] for point in points]
-    y_list = [point[1] for point in points]
-    _len = len(points)
-    centroid_x = sum(x_list) / _len
-    centroid_y = sum(y_list) / _len
-    return (centroid_x, centroid_y)
-
-
-running = True
-angle = math.pi / 2
-while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-        elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_a:
-                if rot:
-                    center = find_center(trans)
-                    trans = [rotate_point(v, angle, center) for v in trans]
-                    rot = False
-            #pygame.draw.polygon(screen, (255, 51, 255), rotated_vertices)
-    else:
-        rot = True
-    screen.fill((255, 255, 255))  # Fill the screen with white
-    # Game logic and updates go here
-    pygame.draw.polygon(screen, (102, 255, 255), I)
-    pygame.draw.polygon(screen, (255, 51, 255), trans)
-    pygame.draw.polygon(screen, (255, 255, 0), transO)
-    pygame.draw.polygon(screen, (0, 0, 255), transJ)
-    pygame.draw.polygon(screen, (255, 153, 51), transL)
-    pygame.draw.polygon(screen, (51, 255, 51), transS)
-    pygame.draw.polygon(screen, (255, 0, 0), transZ)
-    # Rendering
-    
-    
-    pygame.display.flip()    # Update the display
-
-
-pygame.quit()
-
-#function for the main game loop
-def main_game():
-    int shape_select = random.randint(0, 6)
-    cur_shape = shape(0, 0, shapes[shape_select], get_name(shape_select))
-    active_shapes.append(cur_shape)
-    for sh in active_shapes:
-        draw_shape(sh)
-    
 
 class shape:
-    int startX
-    int startY
+    startX
+    startY
     shape = []
-    String shape_name
+    shape_name = ""
+    rot_num = 0
     def __init__(self, startX, startY, shape, shape_name):
         self.startX = startX
         self.startY = startY
         self.shape = shape
         self.shape_name = shape_name
+
+#function for the main game loop
+pressed = False
+def main_game():
+    global space
+    global pressed
+    global cur_shape
+    if event.type == pygame.KEYDOWN:
+        if event.key == pygame.K_LEFT:
+            if not pressed and cur_shape != [] and cur_shape.startX - space >= 0:
+                cur_shape.shape = [(x - space, y) for x, y in cur_shape.shape]
+                cur_shape.startX -= space
+                pressed = True
+                active_shapes.append(cur_shape)
+        elif event.key == pygame.K_RIGHT:
+            if not pressed and cur_shape != [] and cur_shape.startX + space < 700:
+                cur_shape.shape = [(x + space, y) for x, y in cur_shape.shape]
+                cur_shape.startX += space
+                pressed = True
+                active_shapes.append(cur_shape)
+        elif event.key == pygame.K_DOWN:
+            if not pressed and cur_shape != [] and cur_shape.startY + space < 550:
+                cur_shape.shape = [(x, y + space) for x, y in cur_shape.shape]
+                cur_shape.startY += space
+                pressed = True
+                active_shapes.append(cur_shape)
+        elif event.key == pygame.K_UP:
+            if not pressed and cur_shape != [] and cur_shape.startY - space >= 0:
+                cur_shape.startY -= space
+                cur_shape.shape = [(x, y - space) for x, y in cur_shape.shape]
+                pressed = True
+                active_shapes.append(cur_shape)
+    elif event.type == pygame.KEYUP:
+        if event.key == pygame.K_UP or event.key == pygame.K_DOWN or event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
+            pressed = False
     
+    for sh in active_shapes:
+        draw_shape(sh)
+
+
+def not_pressed():
+        global cur_shape
+        global active_shapes
+        shape_select = random.randint(0, 6)
+        cur_shape = shape(0, 0, shapes[shape_select], get_name(shape_select))
+        active_shapes.append(cur_shape)
     
 def get_name(sel):
     if sel == 0:
@@ -140,16 +107,126 @@ def get_name(sel):
         
 def draw_shape(sh):
     if sh.shape_name == "I":
-        pygame.draw.polygon(screen, (102, 255, 255), sh)
+        pygame.draw.polygon(screen, (102, 255, 255), sh.shape)
     elif sh.shape_name == "T":
-        pygame.draw.polygon(screen, (255, 51, 255), sh)
+        pygame.draw.polygon(screen, (255, 51, 255), sh.shape)
     elif sh.shape_name == "O":
-        pygame.draw.polygon(screen, (255, 255, 0), transO)
+        pygame.draw.polygon(screen, (255, 255, 0), sh.shape)
     elif sh.shape_name == "J":
-        pygame.draw.polygon(screen, (0, 0, 255), transJ)
+        pygame.draw.polygon(screen, (0, 0, 255), sh.shape)
     elif sh.shape_name == "L":
-        pygame.draw.polygon(screen, (255, 153, 51), transL)
+        pygame.draw.polygon(screen, (255, 153, 51), sh.shape)
     elif sh.shape_name == "S":
-        pygame.draw.polygon(screen, (51, 255, 51), transS)
+        pygame.draw.polygon(screen, (51, 255, 51), sh.shape)
     elif sh.shape_name == "Z":
-        pygame.draw.polygon(screen, (255, 0, 0), transZ)
+        pygame.draw.polygon(screen, (255, 0, 0), sh.shape)
+
+
+def rotate_shape(sh):
+    global I, T, O, J, L, S, Z
+    incrX = [sh.startX, sh.startX + space, sh.startX + (space * 2), sh.startX + (space * 3), sh.startX + (space * 4)]
+    incrY = [sh.startY, sh.startY + space, sh.startY + (space * 2), sh.startY + (space * 3), sh.startY + (space * 4)]
+    if sh.shape_name == "I":
+        #init spot
+        if sh.rot_num == 0 or sh.rot_num == 2:
+            sh.shape = [(incrX[0], incrY[0]), (incrX[0], incrY[1]), (incrX[4], incrY[1]), (incrX[4], incrY[0]), (incrX[0], incrY[0])]
+            sh.rot_num += 1
+        if sh.rot_num == 1 or sh.rot_num == 3:
+            sh.shape = [(incrX[0], incrY[0]), (incrX[0], incrY[4]), (incrX[1], incrY[4]), (incrX[1], incrY[0]), (incrX[0], incrY[0])]
+            if sh.rot_num == 3:
+                sh.rot_num = 0
+            else:
+                sh.rot_num += 1
+    elif sh.shape_name == "T":
+        if sh.rot_num == 0:
+            sh.shape = [(incrX[0], incrY[1]), (incrX[0], incrY[2]), (incrX[1], incrY[2]), (incrX[1], incrY[3]), (incrX[2], incrY[3]), (incrX[2], incrY[0]), (incrX[1], incrY[0]), (incrX[1], incrY[1]), (incrX[0], incrY[1])]
+            sh.rot_num += 1
+        if sh.rot_num == 1:
+            sh.shape = [(incrX[0], incrY[1]), (incrX[0], incrY[2]), (incrX[1], incrY[2]), (incrX[1], incrY[3]), (incrX[2], incrY[3]), (incrX[2], incrY[0]), (incrX[1], incrY[0]), (incrX[1], incrY[1]), (incrX[0], incrY[1])]
+            sh.rot_num += 1
+        if sh.rot_num == 2:
+            sh.shape = [(incrX[0], incrY[1]), (incrX[0], incrY[2]), (incrX[1], incrY[2]), (incrX[1], incrY[3]), (incrX[2], incrY[3]), (incrX[2], incrY[0]), (incrX[1], incrY[0]), (incrX[1], incrY[1]), (incrX[0], incrY[1])]            
+            sh.rot_num += 1
+        if sh.rot_num == 3:
+            sh.shape = [(incrX[0], incrY[1]), (incrX[0], incrY[2]), (incrX[1], incrY[2]), (incrX[1], incrY[3]), (incrX[2], incrY[3]), (incrX[2], incrY[0]), (incrX[1], incrY[0]), (incrX[1], incrY[1]), (incrX[0], incrY[1])]
+            sh.rot_num = 0
+            sh.shape = T
+    elif sh.shape_name == "O":
+        if sh.rot_num == 0:
+            sh.shape = O
+        if sh.rot_num == 1:
+            sh.shape = O
+        if sh.rot_num == 2:
+            sh.shape = O
+        if sh.rot_num == 3:
+            sh.shape = O
+    elif sh.shape_name == "J":
+        if sh.rot_num == 0:
+            sh.shape = J
+        if sh.rot_num == 1:
+            sh.shape = J
+        if sh.rot_num == 2:
+            sh.shape = J
+        if sh.rot_num == 3:
+            sh.shape = J
+    elif sh.shape_name == "L":
+        if sh.rot_num == 0:
+            sh.shape = L
+        if sh.rot_num == 1:
+            sh.shape = L
+        if sh.rot_num == 2:
+            sh.shape = L
+        if sh.rot_num == 3:
+            sh.shape = L
+    elif sh.shape_name == "S":
+        if sh.rot_num == 0:
+            sh.shape = S
+        if sh.rot_num == 1:
+            sh.shape = S
+        if sh.rot_num == 2:
+            sh.shape = S
+        if sh.rot_num == 3:
+            sh.shape = S
+    elif sh.shape_name == "Z":
+        if sh.rot_num == 0:
+            sh.shape = Z
+        if sh.rot_num == 1:
+            sh.shape = Z
+        if sh.rot_num == 2:
+            sh.shape = Z
+        if sh.rot_num == 3:
+            sh.shape = Z
+
+
+#
+# LEAVE THIS AT THE BOTTOM!!!!
+#
+running = True
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_a:
+                if rot:
+                    if cur_shape != []:
+                        active_shapes.remove(cur_shape)
+                        rotate_shape(cur_shape)
+                        rot = False
+                        active_shapes.append(cur_shape)
+            elif event.key == pygame.K_d:
+                if not pressed:
+                    not_pressed()
+                    pressed = True
+    else:
+        rot = True
+    screen.fill((255, 255, 255))  # Fill the screen with white
+    # Game logic and updates go here
+    main_game()
+    # Rendering
+    
+    
+    pygame.display.flip()    # Update the display
+
+
+pygame.quit()
