@@ -128,74 +128,71 @@ def rotate_shape(sh):
     incrY = [sh.startY, sh.startY + space, sh.startY + (space * 2), sh.startY + (space * 3), sh.startY + (space * 4)]
     if sh.shape_name == "I":
         #init spot
-        if sh.rot_num == 0 or sh.rot_num == 2:
+        if sh.rot_num == 0:
             sh.shape = [(incrX[0], incrY[0]), (incrX[0], incrY[1]), (incrX[4], incrY[1]), (incrX[4], incrY[0]), (incrX[0], incrY[0])]
             sh.rot_num += 1
-        if sh.rot_num == 1 or sh.rot_num == 3:
+        elif sh.rot_num == 1:
             sh.shape = [(incrX[0], incrY[0]), (incrX[0], incrY[4]), (incrX[1], incrY[4]), (incrX[1], incrY[0]), (incrX[0], incrY[0])]
-            if sh.rot_num == 3:
-                sh.rot_num = 0
-            else:
-                sh.rot_num += 1
+            sh.rot_num = 0
     elif sh.shape_name == "T":
         if sh.rot_num == 0:
             sh.shape = [(incrX[0], incrY[1]), (incrX[0], incrY[2]), (incrX[1], incrY[2]), (incrX[1], incrY[3]), (incrX[2], incrY[3]), (incrX[2], incrY[0]), (incrX[1], incrY[0]), (incrX[1], incrY[1]), (incrX[0], incrY[1])]
             sh.rot_num += 1
-        if sh.rot_num == 1:
-            sh.shape = [(incrX[0], incrY[1]), (incrX[0], incrY[2]), (incrX[1], incrY[2]), (incrX[1], incrY[3]), (incrX[2], incrY[3]), (incrX[2], incrY[0]), (incrX[1], incrY[0]), (incrX[1], incrY[1]), (incrX[0], incrY[1])]
+        elif sh.rot_num == 1:
+            sh.shape = [(incrX[0], incrY[2]), (incrX[3], incrY[2]), (incrX[3], incrY[1]), (incrX[2], incrY[1]), (incrX[2], incrY[0]), (incrX[1], incrY[0]), (incrX[1], incrY[1]), (incrX[0], incrY[1]), (incrX[0], incrY[2])]
             sh.rot_num += 1
-        if sh.rot_num == 2:
-            sh.shape = [(incrX[0], incrY[1]), (incrX[0], incrY[2]), (incrX[1], incrY[2]), (incrX[1], incrY[3]), (incrX[2], incrY[3]), (incrX[2], incrY[0]), (incrX[1], incrY[0]), (incrX[1], incrY[1]), (incrX[0], incrY[1])]            
+        elif sh.rot_num == 2:
+            sh.shape = [(incrX[1], incrY[0]), (incrX[1], incrY[3]), (incrX[2], incrY[3]), (incrX[2], incrY[2]), (incrX[3], incrY[2]), (incrX[3], incrY[1]), (incrX[2], incrY[1]), (incrX[2], incrY[0]), (incrX[1], incrY[0])]            
             sh.rot_num += 1
-        if sh.rot_num == 3:
-            sh.shape = [(incrX[0], incrY[1]), (incrX[0], incrY[2]), (incrX[1], incrY[2]), (incrX[1], incrY[3]), (incrX[2], incrY[3]), (incrX[2], incrY[0]), (incrX[1], incrY[0]), (incrX[1], incrY[1]), (incrX[0], incrY[1])]
+        elif sh.rot_num == 3:
+            sh.shape = [(incrX[0], incrY[0]), (incrX[0], incrY[1]), (incrX[1], incrY[1]), (incrX[1], incrY[2]), (incrX[2], incrY[2]), (incrX[2], incrY[1]), (incrX[3], incrY[1]), (incrX[3], incrY[0]), (incrX[0], incrY[0])]
             sh.rot_num = 0
-            sh.shape = T
+    #theres only one shape that the O can be in
     elif sh.shape_name == "O":
-        if sh.rot_num == 0:
-            sh.shape = O
-        if sh.rot_num == 1:
-            sh.shape = O
-        if sh.rot_num == 2:
-            sh.shape = O
-        if sh.rot_num == 3:
-            sh.shape = O
+        sh.shape = [(incrX[0], incrY[0]), (incrX[0], incrY[2]), (incrX[2], incrY[2]), (incrX[2], incrY[0]), (incrX[0], incrY[0])]
     elif sh.shape_name == "J":
         if sh.rot_num == 0:
-            sh.shape = J
-        if sh.rot_num == 1:
-            sh.shape = J
-        if sh.rot_num == 2:
-            sh.shape = J
-        if sh.rot_num == 3:
-            sh.shape = J
+            sh.shape = [(incrX[0], incrY[0]), (incrX[0], incrY[2]), (incrX[1], incrY[2]), (incrX[1], incrY[1]), (incrX[3], incrX[1]), (incrX[3], incrX[0]), (incrX[0], incrY[0])]
+            sh.rot_num += 1
+        elif sh.rot_num == 1:
+            sh.shape = [(incrX[0], incrY[0]), (incrX[0], incrY[3]), (incrX[2], incrY[3]), (incrX[2], incrY[2]), (incrX[1], incrX[2]), (incrX[1], incrX[0]), (incrX[0], incrY[0])]
+            sh.rot_num += 1
+        elif sh.rot_num == 2:
+            sh.shape = [(incrX[0], incrY[1]), (incrX[0], incrY[2]), (incrX[3], incrY[2]), (incrX[3], incrY[0]), (incrX[2], incrX[0]), (incrX[2], incrX[1]), (incrX[0], incrY[1])]
+            sh.rot_num += 1
+        elif sh.rot_num == 3:
+            sh.shape = [(incrX[0], incrY[0]), (incrX[0], incrY[1]), (incrX[1], incrY[1]), (incrX[1], incrY[3]), (incrX[2], incrX[3]), (incrX[2], incrX[0]), (incrX[0], incrY[0])]
+            sh.rot_num = 0
     elif sh.shape_name == "L":
         if sh.rot_num == 0:
-            sh.shape = L
-        if sh.rot_num == 1:
-            sh.shape = L
-        if sh.rot_num == 2:
-            sh.shape = L
-        if sh.rot_num == 3:
-            sh.shape = L
+            print("here")
+            sh.shape = [(incrX[0], incrY[0]), (incrX[0], incrY[2]), (incrX[3], incrY[2]), (incrX[3], incrY[1]), (incrX[1], incrX[1]), (incrX[1], incrX[0]), (incrX[0], incrY[0])]
+            sh.rot_num += 1
+        elif sh.rot_num == 1:
+            print("here 2")
+            sh.shape = [(incrX[0], incrY[2]), (incrX[0], incrY[3]), (incrX[2], incrY[3]), (incrX[2], incrY[0]), (incrX[1], incrX[0]), (incrX[1], incrX[2]), (incrX[0], incrY[2])]
+            sh.rot_num += 1
+        elif sh.rot_num == 2:
+            print("here 3")
+            sh.shape = [(incrX[0], incrY[0]), (incrX[0], incrY[1]), (incrX[2], incrY[1]), (incrX[2], incrY[2]), (incrX[3], incrX[2]), (incrX[3], incrX[0]), (incrX[0], incrY[0])]
+            sh.rot_num += 1
+        elif sh.rot_num == 3:
+            sh.shape = [(incrX[0], incrY[0]), (incrX[0], incrY[3]), (incrX[1], incrY[3]), (incrX[1], incrY[1]), (incrX[2], incrX[1]), (incrX[2], incrX[0]), (incrX[0], incrY[0])]
+            sh.rot_num = 0
     elif sh.shape_name == "S":
         if sh.rot_num == 0:
-            sh.shape = S
-        if sh.rot_num == 1:
-            sh.shape = S
-        if sh.rot_num == 2:
-            sh.shape = S
-        if sh.rot_num == 3:
-            sh.shape = S
+            sh.shape = [(incrX[0],incrY[1]),(incrX[0],incrY[3]),(incrX[1],incrY[3]),(incrX[1], incrY[2]),(incrX[2], incrY[2]),(incrX[2], incrY[0]), (incrX[1], incrY[0]), (incrX[1], incrY[1]), (incrX[0], incrY[1])]
+            sh.rot_num += 1
+        elif sh.rot_num == 1:
+            sh.shape = [(incrX[0],incrY[1]),(incrX[0],incrY[3]),(incrX[1],incrY[3]),(incrX[1], incrY[2]),(incrX[2], incrY[2]),(incrX[2], incrY[0]), (incrX[1], incrY[0]), (incrX[1], incrY[1]), (incrX[0], incrY[1])]
+            sh.rot_num = 0
     elif sh.shape_name == "Z":
         if sh.rot_num == 0:
-            sh.shape = Z
-        if sh.rot_num == 1:
-            sh.shape = Z
-        if sh.rot_num == 2:
-            sh.shape = Z
-        if sh.rot_num == 3:
-            sh.shape = Z
+            sh.shape = [(incrX[0],incrY[0]),(incrX[0],incrY[2]),(incrX[1],incrY[2]),(incrX[1], incrY[3]),(incrX[2], incrY[3]),(incrX[2], incrY[1]), (incrX[1], incrY[1]), (incrX[1], incrY[0]), (incrX[0], incrY[0])]
+            sh.rot_num += 1
+        elif sh.rot_num == 1:
+            sh.shape = [(incrX[0],incrY[1]),(incrX[0],incrY[2]),(incrX[2],incrY[2]),(incrX[2], incrY[1]),(incrX[3], incrY[1]),(incrX[3], incrY[0]), (incrX[1], incrY[0]), (incrX[1], incrY[1]), (incrX[0], incrY[1])]
+            sh.rot_num = 0
 
 
 #
