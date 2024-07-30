@@ -2,77 +2,145 @@
 import pygame
 import math
 import random
+import copy
+import threading
+import time
 
 pygame.init()
+
+#initial values of shapes
+I = [1, 2, 3, 4]
+T = [1, 5, 6, 9]
+J = [5, 9, 10, 11]
+L = [5, 6, 7, 9]
+S = [1, 5, 6, 10]
+Z = [6, 9, 10, 13]
+O = [5, 9, 6, 10]
+
+shapes = [I, T, O, J, L, S, Z]
+names = {"I": I, "T": T, "O": O, "J": J, "L": L, "S": S, "Z": Z}
+
 
 # Set up the window dimensions
 width, height = 800, 600
 screen = pygame.display.set_mode((width, height))
-
+#was our previous rotation a left or a right?
+#important for resetting a value
+left = False
+#we cant assume which way the user will flip first
+firstPress = False
 # Set a title for the window
 pygame.display.set_caption("Tetris")
 startX = 0
 startY = 0
-angle = 90
 #the size of each block
 space = 30
-cur_shape = []
-#makes it easier on the eyes
-incrX = [startX, startX + space, startX + (space * 2), startX + (space * 3)]
-incrY = [startY, startY + space, startY + (space * 2), startY + (space * 3)]
-I = [(incrX[0], startY), (incrX[0], startY + (space * 4)), (startX + space, startY + (space * 4)), (startX + space, startY), (startX, startY)]
-T = [(incrX[0], startY), (incrX[1], startY), (startX + space, startY + space), (startX + (space * 2), startY + space), (startX + (space * 2), startY + (space * 2)), (startX - space, startY + (space * 2)), (startX - space, startY + space), (startX, startY + space), (startX, startY)]
-O = [(incrX[0], startY), (incrX[2], startY), (startX + (space * 2), startY + (space * 2)), (startX, startY + (space * 2)), (startX, startY)]
-J = [(incrX[0], incrY[0]), (incrX[0], incrY[1]), (incrX[1], incrY[1]), (incrX[1], incrY[3]), (incrX[2], incrX[3]), (incrX[2], incrX[0]), (incrX[0], incrY[0])]
-L = [(incrX[0], incrY[0]), (incrX[0], incrY[3]), (incrX[1], incrY[3]), (incrX[1], incrY[1]), (incrX[2], incrY[1]), (incrX[2], incrY[0]), (incrX[0], incrY[0])]
-S = [(incrX[0], incrY[0]), (incrX[0], incrY[1]), (incrX[1], incrY[1]), (incrX[1], incrY[2]),(incrX[3], incrY[2]),(incrX[3], incrY[1]),(incrX[2], incrY[1]),(incrX[2], incrY[0]),(incrX[0], incrY[0])]
-Z = [(incrX[0], incrY[2]), (incrX[2], incrY[2]), (incrX[2], incrY[1]), (incrX[3], incrY[1]),(incrX[3], incrY[0]),(incrX[1], incrY[0]),(incrX[1], incrY[1]),(incrX[0], incrY[1]),(incrX[0], incrY[2])]
-shapes = [I, T, O, J, L, S, Z]
+
 active_shapes = []
 
 class shape:
     startX
     startY
-    shape = []
+    sh = []
     shape_name = ""
     rot_num = 0
-    def __init__(self, startX, startY, shape, shape_name):
+    def __init__(self, startX, startY, shape_name):
         self.startX = startX
         self.startY = startY
-        self.shape = shape
         self.shape_name = shape_name
+
+cur_shape = shape(0, 0, "")
+nextShape = shape(0, 0, "")
+
+def get_rect(a):
+    cur_shape.sh = []
+    for s in a:
+        x = s / 4
+        y = s % 4
+        if s == 4:
+            x = 0
+            y = 4
+        #left, top, width, height
+        x = int(x)
+        y = int(y)
+        cur_shape.sh.append(pygame.Rect(cur_shape.startX + ((x-1) * space), cur_shape.startY + ((y-1) * space), space, space))
+
+
+def check_collision():
+    for s in active_shapes:
+        for a in s.sh:
+            for o in cur_shape.sh:
+                if a.colliderect(o):
+                    return True
+    return False
+
+# dir == true means move y units
+# dir == false means move x units
+def trans_rects(dir, num):
+    for s in cur_shape.sh:
+        if dir:
+            s.move_ip(0, num)
+        else:
+            s.move_ip(num, 0)
 
 #function for the main game loop
 pressed = False
+first = True
 def main_game():
     global space
     global pressed
     global cur_shape
+    global first
+    if first:
+        first = False
+        #next_shape()
+        #move_cur_shape()
+    old_shape = copy.deepcopy(cur_shape)
     if event.type == pygame.KEYDOWN:
         if event.key == pygame.K_LEFT:
-            if not pressed and cur_shape != [] and cur_shape.startX - space >= 0:
-                cur_shape.shape = [(x - space, y) for x, y in cur_shape.shape]
-                cur_shape.startX -= space
-                pressed = True
-                active_shapes.append(cur_shape)
+            if not pressed and cur_shape.sh != [] and cur_shape.startX - space >= 0:
+                    active_shapes.remove(cur_shape)
+                    cur_shape.startX -= space
+                    trans_rects(False, space * -1)
+                    if check_collision():
+                        cur_shape.startX += space
+                        trans_rects(False, space)
+                    active_shapes.append(cur_shape)
+                    pressed = True
         elif event.key == pygame.K_RIGHT:
-            if not pressed and cur_shape != [] and cur_shape.startX + space < 700:
-                cur_shape.shape = [(x + space, y) for x, y in cur_shape.shape]
+            if not pressed and cur_shape.sh != [] and cur_shape.startX + space < 700:
+                active_shapes.remove(cur_shape)
                 cur_shape.startX += space
-                pressed = True
+                trans_rects(False, space)
+                if check_collision():
+                    cur_shape.startX -= space
+                    trans_rects(False, space * -1)
                 active_shapes.append(cur_shape)
+                pressed = True
         elif event.key == pygame.K_DOWN:
-            if not pressed and cur_shape != [] and cur_shape.startY + space < 550:
-                cur_shape.shape = [(x, y + space) for x, y in cur_shape.shape]
+            if not pressed and cur_shape.sh != [] and cur_shape.startY + space < 550:
+                active_shapes.remove(cur_shape)
                 cur_shape.startY += space
-                pressed = True
+                trans_rects(True, space)
+                if check_collision():
+                    cur_shape.startY -= space
+                    trans_rects(True, -space)
                 active_shapes.append(cur_shape)
-        elif event.key == pygame.K_UP:
-            if not pressed and cur_shape != [] and cur_shape.startY - space >= 0:
-                cur_shape.startY -= space
-                cur_shape.shape = [(x, y - space) for x, y in cur_shape.shape]
                 pressed = True
-                active_shapes.append(cur_shape)
+        #t1 = threading.Thread(move_down, none)
+        #leaving this here as playground code
+        #if you want to free move the blocks around the screen, this is for
+        #moving the blocks up
+        #elif event.key == pygame.K_UP:
+            #if not pressed and cur_shape.sh != [] and cur_shape.startY - space >= 0:
+                #active_shapes.remove(cur_shape)
+                #cur_shape.startY -= space
+                #trans_rects(True, -space)
+                #if check_collision():
+                    #cur_shape.startY += space
+                    #trans_rects(True, space)
+                #active_shapes.append(cur_shape)
+                #pressed = True
     elif event.type == pygame.KEYUP:
         if event.key == pygame.K_UP or event.key == pygame.K_DOWN or event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
             pressed = False
@@ -81,13 +149,55 @@ def main_game():
         draw_shape(sh)
 
 
-def not_pressed():
-        global cur_shape
+def move_down():
+    ch = True
+    while ch and cur_shape.startY > 700:
+        time.sleep(1)
+        active_shapes.remove(cur_shape)
+        cur_shape.startY -= space
+        trans_rects(True, space)
+        if check_collision():
+            cur_shape.startY -= space
+            trans_rects(True, -space)
+            time.sleep(5)
+            if check_collision():
+                #freezes the current shape in place
+                move_cur_shape()
+        active_shapes.append(cur_shape)
+    if cur_shape.startY >= 700:
+        time.sleep(5)
+        move_cur_shape()
+    
+
+def next_shape():
+        global nextShape
         global active_shapes
         shape_select = random.randint(0, 6)
-        cur_shape = shape(0, 0, shapes[shape_select], get_name(shape_select))
+        #put it in the "ready" spot
+        nextShape = shape(500, 150, get_name(shape_select))
+        #active_shapes.append(cur_shape)
+        get_rect(shapes[shape_select])
+
+def move_cur_shape():
+        global nextShape
+        global active_shapes
+        global cur_shape
+        #put it in the "ready" spot
+        cur_shape = copy.deepcopy(nextShape)
+        next_shape()
+        print(cur_shape.sh)
         active_shapes.append(cur_shape)
-    
+
+def get_next_shape():
+    global active_shapes
+    global cur_shape
+    shape_select = random.randint(0, 6)
+    #put it in the "ready" spot
+    cur_shape = shape(500, 150, get_name(shape_select))
+    active_shapes.append(cur_shape)
+    get_rect(shapes[shape_select])
+
+
 def get_name(sel):
     if sel == 0:
         return "I"
@@ -107,92 +217,196 @@ def get_name(sel):
         
 def draw_shape(sh):
     if sh.shape_name == "I":
-        pygame.draw.polygon(screen, (102, 255, 255), sh.shape)
+        for s in sh.sh:
+            pygame.draw.rect(screen, (102, 255, 255), s)
     elif sh.shape_name == "T":
-        pygame.draw.polygon(screen, (255, 51, 255), sh.shape)
+        for s in sh.sh:
+            pygame.draw.rect(screen, (255, 51, 255), s)
     elif sh.shape_name == "O":
-        pygame.draw.polygon(screen, (255, 255, 0), sh.shape)
+        for s in sh.sh:    
+            pygame.draw.rect(screen, (255, 255, 0), s)
     elif sh.shape_name == "J":
-        pygame.draw.polygon(screen, (0, 0, 255), sh.shape)
+        for s in sh.sh:
+            pygame.draw.rect(screen, (0, 0, 255), s)
     elif sh.shape_name == "L":
-        pygame.draw.polygon(screen, (255, 153, 51), sh.shape)
+        for s in sh.sh:
+            pygame.draw.rect(screen, (255, 153, 51), s)
     elif sh.shape_name == "S":
-        pygame.draw.polygon(screen, (51, 255, 51), sh.shape)
+        for s in sh.sh:    
+            pygame.draw.rect(screen, (51, 255, 51), s)
     elif sh.shape_name == "Z":
-        pygame.draw.polygon(screen, (255, 0, 0), sh.shape)
+        for s in sh.sh:
+            pygame.draw.rect(screen, (255, 0, 0), s)
 
 
-def rotate_shape(sh):
-    global I, T, O, J, L, S, Z
-    incrX = [sh.startX, sh.startX + space, sh.startX + (space * 2), sh.startX + (space * 3), sh.startX + (space * 4)]
-    incrY = [sh.startY, sh.startY + space, sh.startY + (space * 2), sh.startY + (space * 3), sh.startY + (space * 4)]
+def rotate_shape_left(sh):
+    global I, T, O, J, L, S, Z, left, firstPress
+    #fix some rotation issues
+    if not left and not firstPress:
+        left = True
+        if sh.shape_name == "I" or sh.shape_name == "S" or sh.shape_name == "Z":
+            #do nothing
+            pass
+        else:
+            if sh.rot_num == 2:
+                sh.rot_num = 0
+            elif sh.rot_num == 3:
+                sh.rot_num = 1
+            else:
+                sh.rot_num += 2
     if sh.shape_name == "I":
         #init spot
         if sh.rot_num == 0:
-            sh.shape = [(incrX[0], incrY[0]), (incrX[0], incrY[1]), (incrX[4], incrY[1]), (incrX[4], incrY[0]), (incrX[0], incrY[0])]
+            get_rect([3, 7, 11, 15])
             sh.rot_num += 1
         elif sh.rot_num == 1:
-            sh.shape = [(incrX[0], incrY[0]), (incrX[0], incrY[4]), (incrX[1], incrY[4]), (incrX[1], incrY[0]), (incrX[0], incrY[0])]
+            get_rect(I)
             sh.rot_num = 0
     elif sh.shape_name == "T":
         if sh.rot_num == 0:
-            sh.shape = [(incrX[0], incrY[1]), (incrX[0], incrY[2]), (incrX[1], incrY[2]), (incrX[1], incrY[3]), (incrX[2], incrY[3]), (incrX[2], incrY[0]), (incrX[1], incrY[0]), (incrX[1], incrY[1]), (incrX[0], incrY[1])]
-            sh.rot_num += 1
+            get_rect([5, 6, 7, 10])
         elif sh.rot_num == 1:
-            sh.shape = [(incrX[0], incrY[2]), (incrX[3], incrY[2]), (incrX[3], incrY[1]), (incrX[2], incrY[1]), (incrX[2], incrY[0]), (incrX[1], incrY[0]), (incrX[1], incrY[1]), (incrX[0], incrY[1]), (incrX[0], incrY[2])]
-            sh.rot_num += 1
+            get_rect([6, 10, 14, 9])
         elif sh.rot_num == 2:
-            sh.shape = [(incrX[1], incrY[0]), (incrX[1], incrY[3]), (incrX[2], incrY[3]), (incrX[2], incrY[2]), (incrX[3], incrY[2]), (incrX[3], incrY[1]), (incrX[2], incrY[1]), (incrX[2], incrY[0]), (incrX[1], incrY[0])]            
-            sh.rot_num += 1
+            get_rect([9, 10, 11, 6])
         elif sh.rot_num == 3:
-            sh.shape = [(incrX[0], incrY[0]), (incrX[0], incrY[1]), (incrX[1], incrY[1]), (incrX[1], incrY[2]), (incrX[2], incrY[2]), (incrX[2], incrY[1]), (incrX[3], incrY[1]), (incrX[3], incrY[0]), (incrX[0], incrY[0])]
+            get_rect(T)
+        if sh.rot_num != 3:
+            sh.rot_num += 1
+        else:
             sh.rot_num = 0
     #theres only one shape that the O can be in
     elif sh.shape_name == "O":
-        sh.shape = [(incrX[0], incrY[0]), (incrX[0], incrY[2]), (incrX[2], incrY[2]), (incrX[2], incrY[0]), (incrX[0], incrY[0])]
+        get_rect(O)
     elif sh.shape_name == "J":
         if sh.rot_num == 0:
-            sh.shape = [(incrX[0], incrY[0]), (incrX[0], incrY[2]), (incrX[1], incrY[2]), (incrX[1], incrY[1]), (incrX[3], incrX[1]), (incrX[3], incrX[0]), (incrX[0], incrY[0])]
+            get_rect([1, 2, 5, 9])
             sh.rot_num += 1
         elif sh.rot_num == 1:
-            sh.shape = [(incrX[0], incrY[0]), (incrX[0], incrY[3]), (incrX[2], incrY[3]), (incrX[2], incrY[2]), (incrX[1], incrX[2]), (incrX[1], incrX[0]), (incrX[0], incrY[0])]
+            get_rect([5, 6, 7, 11])
             sh.rot_num += 1
         elif sh.rot_num == 2:
-            sh.shape = [(incrX[0], incrY[1]), (incrX[0], incrY[2]), (incrX[3], incrY[2]), (incrX[3], incrY[0]), (incrX[2], incrX[0]), (incrX[2], incrX[1]), (incrX[0], incrY[1])]
+            get_rect([6, 10, 14, 13])
             sh.rot_num += 1
         elif sh.rot_num == 3:
-            sh.shape = [(incrX[0], incrY[0]), (incrX[0], incrY[1]), (incrX[1], incrY[1]), (incrX[1], incrY[3]), (incrX[2], incrX[3]), (incrX[2], incrX[0]), (incrX[0], incrY[0])]
+            get_rect(J)
             sh.rot_num = 0
     elif sh.shape_name == "L":
         if sh.rot_num == 0:
-            print("here")
-            sh.shape = [(incrX[0], incrY[0]), (incrX[0], incrY[2]), (incrX[3], incrY[2]), (incrX[3], incrY[1]), (incrX[1], incrX[1]), (incrX[1], incrX[0]), (incrX[0], incrY[0])]
+            get_rect([6, 7, 11, 15])
             sh.rot_num += 1
         elif sh.rot_num == 1:
-            print("here 2")
-            sh.shape = [(incrX[0], incrY[2]), (incrX[0], incrY[3]), (incrX[2], incrY[3]), (incrX[2], incrY[0]), (incrX[1], incrX[0]), (incrX[1], incrX[2]), (incrX[0], incrY[2])]
+            get_rect([7, 11, 10, 9])
             sh.rot_num += 1
         elif sh.rot_num == 2:
-            print("here 3")
-            sh.shape = [(incrX[0], incrY[0]), (incrX[0], incrY[1]), (incrX[2], incrY[1]), (incrX[2], incrY[2]), (incrX[3], incrX[2]), (incrX[3], incrX[0]), (incrX[0], incrY[0])]
+            get_rect([5, 9, 13, 14])
             sh.rot_num += 1
         elif sh.rot_num == 3:
-            sh.shape = [(incrX[0], incrY[0]), (incrX[0], incrY[3]), (incrX[1], incrY[3]), (incrX[1], incrY[1]), (incrX[2], incrX[1]), (incrX[2], incrX[0]), (incrX[0], incrY[0])]
+            get_rect(L)
             sh.rot_num = 0
     elif sh.shape_name == "S":
         if sh.rot_num == 0:
-            sh.shape = [(incrX[0],incrY[1]),(incrX[0],incrY[3]),(incrX[1],incrY[3]),(incrX[1], incrY[2]),(incrX[2], incrY[2]),(incrX[2], incrY[0]), (incrX[1], incrY[0]), (incrX[1], incrY[1]), (incrX[0], incrY[1])]
-            sh.rot_num += 1
+            get_rect([6, 7, 9, 10])
         elif sh.rot_num == 1:
-            sh.shape = [(incrX[0],incrY[1]),(incrX[0],incrY[3]),(incrX[1],incrY[3]),(incrX[1], incrY[2]),(incrX[2], incrY[2]),(incrX[2], incrY[0]), (incrX[1], incrY[0]), (incrX[1], incrY[1]), (incrX[0], incrY[1])]
+            get_rect(S)
             sh.rot_num = 0
     elif sh.shape_name == "Z":
         if sh.rot_num == 0:
-            sh.shape = [(incrX[0],incrY[0]),(incrX[0],incrY[2]),(incrX[1],incrY[2]),(incrX[1], incrY[3]),(incrX[2], incrY[3]),(incrX[2], incrY[1]), (incrX[1], incrY[1]), (incrX[1], incrY[0]), (incrX[0], incrY[0])]
+            get_rect([5, 6, 10, 11])
+            sh.rot_num = 1
+        elif sh.rot_num == 1:
+            get_rect(Z)
+            sh.rot_num = 0
+    if check_collision():
+        sh = copy.deepcopy(old_sh)
+
+
+# maybe I will find a better way to implement rotating, but for now, this is 
+# basically a copied version of rotate_shape_left
+# with the variables going the opposite direction
+def rotate_shape_right(sh):
+    global I, T, O, J, L, S, Z, left, firstPress
+    old_sh = copy.deepcopy(sh)
+    #fix some rotation issues
+    if left and not firstPress:
+        left = True
+        if sh.shape_name == "I" or sh.shape_name == "S" or sh.shape_name == "Z":
+            #do nothing
+            pass
+        else:
+            if sh.rot_num == 1:
+                sh.rot_num = 3
+            elif sh.rot_num == 0:
+                sh.rot_num = 2
+            else:
+                sh.rot_num -= 2
+    if sh.shape_name == "I":
+        #init spot
+        if sh.rot_num == 0:
+            get_rect([3, 7, 11, 15])
             sh.rot_num += 1
         elif sh.rot_num == 1:
-            sh.shape = [(incrX[0],incrY[1]),(incrX[0],incrY[2]),(incrX[2],incrY[2]),(incrX[2], incrY[1]),(incrX[3], incrY[1]),(incrX[3], incrY[0]), (incrX[1], incrY[0]), (incrX[1], incrY[1]), (incrX[0], incrY[1])]
+            get_rect(I)
             sh.rot_num = 0
+    elif sh.shape_name == "T":
+        if sh.rot_num == 0:
+            get_rect([5, 6, 7, 10])
+        elif sh.rot_num == 1:
+            get_rect([6, 10, 14, 9])
+        elif sh.rot_num == 2:
+            get_rect([9, 10, 11, 6])
+        elif sh.rot_num == 3:
+            get_rect(T)
+        if sh.rot_num != 0:
+            sh.rot_num -= 1
+        else:
+            sh.rot_num = 3
+    #theres only one shape that the O can be in
+    elif sh.shape_name == "O":
+        get_rect(O)
+    elif sh.shape_name == "J":
+        if sh.rot_num == 0:
+            get_rect([1, 2, 5, 9])
+            sh.rot_num = 3
+        elif sh.rot_num == 1:
+            get_rect([5, 6, 7, 11])
+            sh.rot_num -= 1
+        elif sh.rot_num == 2:
+            get_rect([6, 10, 14, 13])
+            sh.rot_num -= 1
+        elif sh.rot_num == 3:
+            get_rect(J)
+            sh.rot_num -= 1
+    elif sh.shape_name == "L":
+        if sh.rot_num == 0:
+            get_rect([6, 7, 11, 15])
+            sh.rot_num = 3
+        elif sh.rot_num == 1:
+            get_rect([7, 11, 10, 9])
+            sh.rot_num -= 1
+        elif sh.rot_num == 2:
+            get_rect([5, 9, 13, 14])
+            sh.rot_num -= 1
+        elif sh.rot_num == 3:
+            get_rect(L)
+            sh.rot_num -= 1
+    elif sh.shape_name == "S":
+        if sh.rot_num == 0:
+            get_rect([6, 7, 9, 10])
+            sh.rot_num = 1
+        elif sh.rot_num == 1:
+            get_rect(S)
+            sh.rot_num = 0
+    elif sh.shape_name == "Z":
+        if sh.rot_num == 0:
+            get_rect([5, 6, 10, 11])
+            sh.rot_num = 1
+        elif sh.rot_num == 1:
+            get_rect(Z)
+            sh.rot_num = 0
+    if check_collision():
+        sh = copy.deepcopy(old_sh)
+
 
 
 #
@@ -206,14 +420,28 @@ while running:
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_a:
                 if rot:
-                    if cur_shape != []:
+                    if cur_shape.sh != []:
                         active_shapes.remove(cur_shape)
-                        rotate_shape(cur_shape)
+                        rotate_shape_right(cur_shape)
                         rot = False
+                        #if not check_collision():
+                            #get_rect(names.get(cur_shape.shape_name))
                         active_shapes.append(cur_shape)
+                        firstPress = False
+            if event.key == pygame.K_f:
+                if rot:
+                    if cur_shape.sh != []:
+                        active_shapes.remove(cur_shape)
+                        rotate_shape_left(cur_shape)
+                        rot = False
+                        #if check_collision():
+                            #get_rect(names.get(cur_shape.shape_name))
+                        active_shapes.append(cur_shape)
+                        firstPress = False
             elif event.key == pygame.K_d:
                 if not pressed:
-                    not_pressed()
+                    firstPress = True
+                    get_next_shape()
                     pressed = True
     else:
         rot = True
