@@ -7,6 +7,11 @@ import threading
 import time
 
 pygame.init()
+#CONTROLS
+#arrows to move
+#A and F to rotate
+#D to create a new shape
+
 
 #initial values of shapes
 I = [1, 2, 3, 4]

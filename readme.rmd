@@ -1,0 +1,8 @@
+JTetris by Toxicroak_Gaming
+
+#CONTROLS
+arrows to move
+A and F to rotate
+D to create a new shape
+
+Right now, its just a playground to mess around in
