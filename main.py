@@ -5,6 +5,7 @@ import random
 import copy
 import threading
 import time
+from Shape import shape
 
 pygame.init()
 #CONTROLS
@@ -21,6 +22,13 @@ L = [5, 6, 7, 9]
 S = [1, 5, 6, 10]
 Z = [6, 9, 10, 13]
 O = [5, 9, 6, 10]
+
+
+#there will be a "grid" of squares. 1 will represent occupied and 0 will represent free
+columns = 10
+rows = 20
+grid = [[0 for j in range(columns)]
+for i in range(rows)]
 
 shapes = [I, T, O, J, L, S, Z]
 names = {"I": I, "T": T, "O": O, "J": J, "L": L, "S": S, "Z": Z}
@@ -42,17 +50,6 @@ startY = 0
 space = 30
 
 active_shapes = []
-
-class shape:
-    startX
-    startY
-    sh = []
-    shape_name = ""
-    rot_num = 0
-    def __init__(self, startX, startY, shape_name):
-        self.startX = startX
-        self.startY = startY
-        self.shape_name = shape_name
 
 cur_shape = shape(0, 0, "")
 nextShape = shape(0, 0, "")
@@ -322,8 +319,8 @@ def rotate_shape_left(sh):
         elif sh.rot_num == 1:
             get_rect(Z)
             sh.rot_num = 0
-    if check_collision():
-        sh = copy.deepcopy(old_sh)
+    #if check_collision():
+        #sh = copy.deepcopy(old_sh)
 
 
 # maybe I will find a better way to implement rotating, but for now, this is 
@@ -454,7 +451,6 @@ while running:
     # Game logic and updates go here
     main_game()
     # Rendering
-    
     
     pygame.display.flip()    # Update the display
 
