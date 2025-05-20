@@ -1,4 +1,5 @@
 JTetris by Toxicroak_Gaming
+Made in Python using Pygame
 
 #CONTROLS
 arrows to move
